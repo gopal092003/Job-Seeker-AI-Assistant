@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-
 import { supabase } from "@/lib/supabase/client";
 
 import type { Profile } from "@/types/profile";
@@ -73,7 +72,7 @@ export function Navbar({
         <div className="flex items-center gap-3">
           {user && (
             <span className="hidden text-sm text-muted-foreground md:block">
-              {user.user_name}
+              {user.name}
             </span>
           )}
 
