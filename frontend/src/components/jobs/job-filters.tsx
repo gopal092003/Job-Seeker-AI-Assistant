@@ -55,22 +55,18 @@ export function JobFilters({
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border p-4">
       <Toggle
-        pressed={
-          selectedOnly
-        }
-        onPressedChange={
-          setSelectedOnly
+        pressed={selectedOnly}
+        onClick={() =>
+          setSelectedOnly((prev) => !prev)
         }
       >
         Selected Only
       </Toggle>
 
       <Toggle
-        pressed={
-          contactOnly
-        }
-        onPressedChange={
-          setContactOnly
+        pressed={contactOnly}
+        onClick={() =>
+          setContactOnly((prev) => !prev)
         }
       >
         Contact Found
