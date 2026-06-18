@@ -1,0 +1,9 @@
+CREATE INDEX idx_profiles_email ON profiles(email);
+CREATE INDEX idx_keywords_name ON keywords(name);
+CREATE INDEX idx_degrees_name ON degrees(name);
+CREATE INDEX idx_institutes_name ON institutes(name);
+CREATE INDEX idx_companies_name ON companies(name);
+CREATE INDEX idx_jobs_user ON available_jobs(user_id);
+CREATE INDEX idx_jobs_link ON available_jobs(job_link);
+CREATE INDEX idx_resumes_user ON resumes(user_id);
+CREATE INDEX idx_resumes_job ON resumes(job_link);
