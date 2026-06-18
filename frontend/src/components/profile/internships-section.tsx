@@ -1,5 +1,3 @@
-// src/components/profile/internships-section.tsx
-
 "use client";
 
 import { useState } from "react";
@@ -40,10 +38,14 @@ export function InternshipsSection() {
 
   const handleCreateInternship =
     async (internship: {
-      companyName: string;
-      role: string;
+      company: string;
+
+      designation: string;
+
       description: string;
+
       startDate?: string;
+
       endDate?: string;
     }) => {
       await createInternship(
