@@ -16,9 +16,13 @@ export type AgentSettings = {
 export type Project = {
   id: string;
 
-  projectLinks: string[];
+  title: string;
+
+  links: string[];
 
   description: string;
+
+  skills: string[];
 
   createdAt?: string;
   updatedAt?: string;
@@ -27,13 +31,17 @@ export type Project = {
 export type Internship = {
   id: string;
 
-  companyName: string;
+  company: string;
 
-  role: string;
+  companyName?: string;
 
-  links: string[];
+  designation: string;
 
   description: string;
+
+  startDate?: string | null;
+
+  endDate?: string | null;
 
   createdAt?: string;
   updatedAt?: string;
@@ -46,15 +54,15 @@ export type Education = {
 
   institute: string;
 
-  degreeName: string;
+  degreeName?: string;
 
-  instituteName: string;
+  instituteName?: string;
 
   cgpa: number | null;
 
-  startDate: string | null;
+  startDate?: string | null;
 
-  endDate: string | null;
+  endDate?: string | null;
 
   createdAt?: string;
 
@@ -86,7 +94,7 @@ export type Handle = {
 export type Profile = {
   id: string;
 
-  user_name: string;
+  name: string;
 
   email: string;
 
@@ -101,8 +109,6 @@ export type Profile = {
   achievementIds: string[];
 
   handles: ProfileRow["handles"];
-
-  agentStatus: boolean;
 };
 
 export type Keyword = {
@@ -124,26 +130,22 @@ export function mapProfileRow(
     email: profile.email,
 
     educationIds:
-      profile.education,
+      profile.education ?? [],
 
     keywordIds:
-      profile.keywords,
+      profile.keywords ?? [],
 
     projectIds:
-      profile.projects,
+      profile.projects ?? [],
 
     internshipIds:
-      profile.intern,
+      profile.intern ?? [],
 
     achievementIds:
-      profile.achievements,
+      profile.achievements ?? [],
 
     handles:
-      profile.handles,
-
-    agentStatus:
-      profile.agent_status ??
-      false,
+      profile.handles ?? {},
   };
 }
 
@@ -156,7 +158,6 @@ export function mapKeywordRow(
     value: keyword.name,
 
     userCount:
-      keyword.user_ids
-        ?.length ?? 0,
+      keyword.user_ids?.length ?? 0,
   };
 }
