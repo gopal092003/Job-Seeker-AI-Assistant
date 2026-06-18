@@ -81,7 +81,7 @@ export type Handle = {
 export type Profile = {
   id: string;
 
-  name: string;
+  user_name: string;
 
   email: string;
 
