@@ -295,15 +295,18 @@ export function useEducation() {
       [],
     );
 
+  type CreateEducationInput = {
+    degree: string;
+    institute: string;
+    cgpa?: number | null;
+    startDate?: string | null;
+    endDate?: string | null;
+  };
+  
   const createEducation =
     useCallback(
       async (
-        record: Omit<
-          Education,
-          | "id"
-          | "createdAt"
-          | "updatedAt"
-        >,
+        record: CreateEducationInput,
       ) => {
         try {
           const {
