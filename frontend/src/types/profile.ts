@@ -42,17 +42,22 @@ export type Internship = {
 export type Education = {
   id: string;
 
-  institution: string;
-
   degree: string;
 
-  specialization: string;
+  institute: string;
 
-  grade: string;
+  degreeName: string;
 
-  additionalNotes: string;
+  instituteName: string;
+
+  cgpa: number | null;
+
+  startDate: string | null;
+
+  endDate: string | null;
 
   createdAt?: string;
+
   updatedAt?: string;
 };
 
