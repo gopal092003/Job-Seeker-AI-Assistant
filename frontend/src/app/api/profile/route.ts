@@ -98,10 +98,10 @@ export async function PATCH(
     const updatePayload = {
       user_name:
         validatedData.user_name,
-
-      settings:
-        validatedData.settings,
-
+    
+      email:
+        validatedData.email,
+    
       updated_at:
         new Date().toISOString(),
     };
