@@ -1,5 +1,3 @@
-// src/components/profile/internship-card.tsx
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +11,7 @@ import type { Internship } from "@/types/profile";
 
 interface InternshipCardProps {
   internship: Internship;
+
   onDelete: (
     internshipId: string,
   ) => void;
@@ -28,13 +27,12 @@ export function InternshipCard({
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="font-semibold">
-              {
-                internship.companyName
-              }
+              {internship.companyName ??
+                internship.company}
             </h3>
 
             <p className="text-sm text-muted-foreground">
-              {internship.role}
+              {internship.designation}
             </p>
           </div>
 
@@ -53,9 +51,7 @@ export function InternshipCard({
 
         {internship.description && (
           <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-            {
-              internship.description
-            }
+            {internship.description}
           </p>
         )}
 
