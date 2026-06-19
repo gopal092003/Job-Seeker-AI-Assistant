@@ -3,7 +3,7 @@
 import { z } from "zod";
 
 export const keywordSchema = z.object({
-  keyword: z
+  name: z
     .string()
     .trim()
     .min(
