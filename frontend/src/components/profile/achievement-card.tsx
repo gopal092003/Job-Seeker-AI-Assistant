@@ -1,4 +1,4 @@
-// src/components/profile/achievements-card.tsx
+// src/components/profile/achievement-card.tsx
 
 "use client";
 
@@ -23,9 +23,12 @@ export function AchievementCard({
   achievement,
   onDelete,
 }: AchievementCardProps) {
+  const proof =
+    achievement.proof ?? "";
+
   const isImage =
     /\.(jpg|jpeg|png|webp|gif)$/i.test(
-      achievement.proof,
+      proof,
     );
 
   return (
@@ -52,50 +55,49 @@ export function AchievementCard({
         </div>
 
         <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-          {achievement.description}
+          {achievement.description ??
+            ""}
         </p>
 
-        <div className="space-y-2">
-          <p className="text-sm font-medium">
-            Proof
-          </p>
+        {proof && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium">
+              Proof
+            </p>
 
-          {isImage ? (
-            <a
-              href={
-                achievement.proof
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src={
-                  achievement.proof
+            {isImage ? (
+              <a
+                href={proof}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src={proof}
+                  alt="Achievement proof"
+                  className="
+                    max-h-64
+                    w-full
+                    rounded-md
+                    border
+                    object-contain
+                  "
+                />
+              </a>
+            ) : (
+              <Button
+                onClick={() =>
+                  window.open(
+                    proof,
+                    "_blank",
+                    "noopener,noreferrer",
+                  )
                 }
-                alt="Achievement proof"
-                className="
-                  max-h-64
-                  w-full
-                  rounded-md
-                  border
-                  object-contain
-                "
-              />
-            </a>
-          ) : (
-            <Button
-              onClick={() =>
-                window.open(
-                  achievement.proof,
-                  "_blank",
-                  "noopener,noreferrer",
-                )
-              }
-            >
-              View Document
-            </Button>
-          )}
-        </div>
+              >
+                View Document
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
