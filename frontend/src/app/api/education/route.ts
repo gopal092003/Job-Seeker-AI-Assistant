@@ -1,6 +1,11 @@
 // src/app/api/education/route.ts
 
-import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
+
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { educationSchema } from "@/lib/validators/education";
@@ -14,18 +19,12 @@ export async function GET() {
       error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError) {
-      throw authError;
-    }
+    if (authError) throw authError;
 
     if (!user) {
       return NextResponse.json(
-        {
-          message: "Unauthorized",
-        },
-        {
-          status: 401,
-        },
+        { message: "Unauthorized" },
+        { status: 401 },
       );
     }
 
@@ -38,9 +37,7 @@ export async function GET() {
       .eq("user_id", user.id)
       .single();
 
-    if (profileError) {
-      throw profileError;
-    }
+    if (profileError) throw profileError;
 
     const educationIds =
       profile?.education ?? [];
@@ -56,13 +53,12 @@ export async function GET() {
       .from("education")
       .select("*")
       .in(
-        "education_id",
+        "education",
         educationIds,
       );
 
-    if (educationError) {
+    if (educationError)
       throw educationError;
-    }
 
     return NextResponse.json(
       education,
@@ -75,9 +71,7 @@ export async function GET() {
             ? error.message
             : "Failed to fetch education",
       },
-      {
-        status: 500,
-      },
+      { status: 500 },
     );
   }
 }
@@ -86,25 +80,20 @@ export async function POST(
   request: NextRequest,
 ) {
   try {
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError) {
-      throw authError;
-    }
+    if (authError) throw authError;
 
     if (!user) {
       return NextResponse.json(
-        {
-          message: "Unauthorized",
-        },
-        {
-          status: 401,
-        },
+        { message: "Unauthorized" },
+        { status: 401 },
       );
     }
 
@@ -112,28 +101,32 @@ export async function POST(
       await request.json();
 
     const validated =
-      educationSchema.safeParse(body);
+      educationSchema.safeParse(
+        body,
+      );
 
     if (!validated.success) {
       return NextResponse.json(
         {
           message:
             validated.error.issues[0]
-              ?.message,
+              ?.message ??
+            "Invalid education data",
         },
-        {
-          status: 400,
-        },
+        { status: 400 },
       );
     }
 
     const {
-      institution,
       degree,
-      specialization,
-      grade,
-      additional_notes,
+      institute,
+      cgpa,
+      startDate,
+      endDate,
     } = validated.data;
+
+    const educationId =
+      randomUUID();
 
     const {
       data: education,
@@ -141,21 +134,26 @@ export async function POST(
     } = await supabase
       .from("education")
       .insert({
-        user_id: user.id,
+        education:
+          educationId,
 
-        institution,
         degree,
-        specialization,
-        grade,
+        institute,
 
-        additional_notes,
+        cgpa:
+          cgpa ?? null,
+
+        start_date:
+          startDate ?? null,
+
+        end_date:
+          endDate ?? null,
       })
       .select()
       .single();
 
-    if (educationError) {
+    if (educationError)
       throw educationError;
-    }
 
     const {
       data: profile,
@@ -166,9 +164,8 @@ export async function POST(
       .eq("user_id", user.id)
       .single();
 
-    if (profileError) {
+    if (profileError)
       throw profileError;
-    }
 
     const currentEducation =
       profile?.education ?? [];
@@ -180,23 +177,20 @@ export async function POST(
       .update({
         education: [
           ...currentEducation,
-          education.education_id,
+          education.education,
         ],
       })
       .eq("user_id", user.id);
 
-    if (updateError) {
+    if (updateError)
       throw updateError;
-    }
 
     return NextResponse.json(
       {
         success: true,
         education,
       },
-      {
-        status: 201,
-      },
+      { status: 201 },
     );
   } catch (error) {
     return NextResponse.json(
@@ -206,9 +200,7 @@ export async function POST(
             ? error.message
             : "Failed to create education",
       },
-      {
-        status: 500,
-      },
+      { status: 500 },
     );
   }
 }

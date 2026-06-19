@@ -5,9 +5,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 interface RouteParams {
-  params: Promise<{
+  params: {
     id: string;
-  }>;
+  };
 }
 
 export async function DELETE(
@@ -16,7 +16,7 @@ export async function DELETE(
 ) {
   try {
     const { id: educationId } =
-      await params;
+      params;
 
     const supabase =
       await createClient();
@@ -58,6 +58,26 @@ export async function DELETE(
       throw profileError;
     }
 
+    const currentEducation =
+      (profile?.education ??
+        []) as string[];
+
+    if (
+      !currentEducation.includes(
+        educationId,
+      )
+    ) {
+      return NextResponse.json(
+        {
+          message:
+            "Education record not found",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
     const {
       error: deleteError,
     } = await supabase
@@ -72,10 +92,6 @@ export async function DELETE(
       throw deleteError;
     }
 
-    const currentEducation =
-      profile?.education ??
-      [];
-
     const {
       error: updateError,
     } = await supabase
@@ -83,9 +99,7 @@ export async function DELETE(
       .update({
         education:
           currentEducation.filter(
-            (
-              id: string,
-            ) =>
+            (id) =>
               id !==
               educationId,
           ),
