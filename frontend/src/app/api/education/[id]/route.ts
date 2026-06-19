@@ -18,7 +18,8 @@ export async function DELETE(
     const { id: educationId } =
       await params;
 
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
@@ -32,7 +33,8 @@ export async function DELETE(
     if (!user) {
       return NextResponse.json(
         {
-          message: "Unauthorized",
+          message:
+            "Unauthorized",
         },
         {
           status: 401,
@@ -46,7 +48,10 @@ export async function DELETE(
     } = await supabase
       .from("profiles")
       .select("education")
-      .eq("user_id", user.id)
+      .eq(
+        "user_id",
+        user.id,
+      )
       .single();
 
     if (profileError) {
@@ -59,17 +64,17 @@ export async function DELETE(
       .from("education")
       .delete()
       .eq(
-        "education_id",
+        "education",
         educationId,
-      )
-      .eq("user_id", user.id);
+      );
 
     if (deleteError) {
       throw deleteError;
     }
 
     const currentEducation =
-      profile?.education ?? [];
+      profile?.education ??
+      [];
 
     const {
       error: updateError,
@@ -81,10 +86,14 @@ export async function DELETE(
             (
               id: string,
             ) =>
-              id !== educationId,
+              id !==
+              educationId,
           ),
       })
-      .eq("user_id", user.id);
+      .eq(
+        "user_id",
+        user.id,
+      );
 
     if (updateError) {
       throw updateError;

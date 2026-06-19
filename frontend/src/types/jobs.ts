@@ -1,53 +1,49 @@
 // src/types/jobs.ts
 
 export interface Job {
-  job_uuid: string;
+  user_id: string;
 
   job_link: string;
 
-  posted_at: string;
+  posted_time: string | null;
 
-  description: string;
+  description: string | null;
 
-  contact_found: boolean;
+  mail: boolean;
 
-  is_selected: boolean;
+  number: boolean;
+
+  contains_zero: boolean;
+
+  contains_yoe: boolean;
+
+  contains_year: boolean;
+
+  contains_experience: boolean;
+
+  skills: string[];
+
+  selected: boolean;
 }
 
 export interface JobFlags {
-  contact_found?: boolean;
+  mail?: boolean;
 
-  is_selected?: boolean;
+  number?: boolean;
+
+  selected?: boolean;
+
+  contains_zero?: boolean;
+
+  contains_yoe?: boolean;
+
+  contains_year?: boolean;
+
+  contains_experience?: boolean;
 }
 
 export type JobStatus =
   | "new"
-  | "contact_found"
+  | "contact_available"
   | "selected"
-  | "archived";
-
-export interface JobFilterState {
-  selectedOnly: boolean;
-
-  contactOnly: boolean;
-
-  search: string;
-
-  status?: JobStatus;
-
-  postedAfter?: string;
-
-  postedBefore?: string;
-}
-
-export interface JobFilters {
-  search?: string;
-
-  contact_found?: boolean;
-
-  is_selected?: boolean;
-
-  posted_after?: string;
-
-  posted_before?: string;
-}
+  | "filtered";

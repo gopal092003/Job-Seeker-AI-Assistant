@@ -1,6 +1,9 @@
 // src/app/api/resumes/[id]/route.ts
 
-import { NextRequest, NextResponse } from "next/server";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,15 +18,18 @@ export async function GET(
   { params }: RouteParams,
 ) {
   try {
-    const { id: resumeId } =
-      await params;
+    const {
+      id: jobLink,
+    } = await params;
 
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } =
+      await supabase.auth.getUser();
 
     if (authError) {
       throw authError;
@@ -32,7 +38,8 @@ export async function GET(
     if (!user) {
       return NextResponse.json(
         {
-          message: "Unauthorized",
+          message:
+            "Unauthorized",
         },
         {
           status: 401,
@@ -45,19 +52,24 @@ export async function GET(
       error: resumeError,
     } = await supabase
       .from("resumes")
-      .select(
-        `
-          resume_id,
-          job_link,
-          created_at,
-          resume_url
-        `,
+      .select(`
+        job_link,
+        intern,
+        project_1,
+        project_2,
+        project_3,
+        achievement
+      `)
+      .eq(
+        "user_id",
+        user.id,
       )
       .eq(
-        "resume_id",
-        resumeId,
+        "job_link",
+        decodeURIComponent(
+          jobLink,
+        ),
       )
-      .eq("user_id", user.id)
       .single();
 
     if (resumeError) {
@@ -76,21 +88,9 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({
-      download_url:
-        resume.resume_url,
-
-      metadata: {
-        resume_id:
-          resume.resume_id,
-
-        job_link:
-          resume.job_link,
-
-        created_at:
-          resume.created_at,
-      },
-    });
+    return NextResponse.json(
+      resume,
+    );
   } catch (error) {
     return NextResponse.json(
       {

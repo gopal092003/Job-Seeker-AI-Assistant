@@ -53,9 +53,7 @@ export function useProfile() {
         internshipIds: data.intern ?? [],
         achievementIds: data.achievements ?? [],
 
-        handles: data.handles ?? [],
-
-        agentStatus: data.agent_status ?? false,
+        handles: data.handles ?? {},
       };
 
       setProfile(mappedProfile);

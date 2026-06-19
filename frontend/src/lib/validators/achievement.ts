@@ -3,7 +3,7 @@
 import { z } from "zod";
 
 export const achievementSchema = z.object({
-  achievement_description: z
+  description: z
     .string()
     .trim()
     .min(
@@ -15,12 +15,19 @@ export const achievementSchema = z.object({
       "Achievement description must be less than 5000 characters",
     ),
 
-  achievement_proof: z
+  proof: z
     .string()
     .trim()
     .url(
       "Achievement proof must be a valid URL",
-    ),
+    )
+    .optional()
+    .or(z.literal("")),
+
+  date: z
+    .string()
+    .optional()
+    .nullable(),
 });
 
 export type AchievementSchema = z.infer<

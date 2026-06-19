@@ -1,6 +1,9 @@
 // src/app/api/projects/[id]/route.ts
 
-import { NextRequest, NextResponse } from "next/server";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,12 +21,14 @@ export async function DELETE(
     const { id: projectId } =
       await params;
 
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } =
+      await supabase.auth.getUser();
 
     if (authError) {
       throw authError;
@@ -32,7 +37,8 @@ export async function DELETE(
     if (!user) {
       return NextResponse.json(
         {
-          message: "Unauthorized",
+          message:
+            "Unauthorized",
         },
         {
           status: 401,
@@ -46,11 +52,34 @@ export async function DELETE(
     } = await supabase
       .from("profiles")
       .select("projects")
-      .eq("user_id", user.id)
+      .eq(
+        "user_id",
+        user.id,
+      )
       .single();
 
     if (profileError) {
       throw profileError;
+    }
+
+    const currentProjects =
+      profile?.projects ??
+      [];
+
+    if (
+      !currentProjects.includes(
+        projectId,
+      )
+    ) {
+      return NextResponse.json(
+        {
+          message:
+            "Project not found",
+        },
+        {
+          status: 404,
+        },
+      );
     }
 
     const {
@@ -58,15 +87,14 @@ export async function DELETE(
     } = await supabase
       .from("projects")
       .delete()
-      .eq("project", projectId)
-      .eq("user_id", user.id);
+      .eq(
+        "project",
+        projectId,
+      );
 
     if (deleteError) {
       throw deleteError;
     }
-
-    const currentProjects =
-      profile?.projects ?? [];
 
     const {
       error: updateError,
@@ -77,10 +105,15 @@ export async function DELETE(
           currentProjects.filter(
             (
               id: string,
-            ) => id !== projectId,
+            ) =>
+              id !==
+              projectId,
           ),
       })
-      .eq("user_id", user.id);
+      .eq(
+        "user_id",
+        user.id,
+      );
 
     if (updateError) {
       throw updateError;

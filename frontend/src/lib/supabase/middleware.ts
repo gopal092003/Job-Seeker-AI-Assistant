@@ -3,7 +3,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-export async function updateSession(request: NextRequest) {
+export async function updateSession(
+  request: NextRequest,
+) {
   let response = NextResponse.next({
     request,
   });
@@ -13,15 +15,15 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
+        get(name) {
           return request.cookies.get(name)?.value;
         },
 
-        set(name: string, value: string, options: Record<string, unknown>) {
+        set(name, value, options) {
           request.cookies.set({
             name,
             value,
-            ...(options as object),
+            ...options,
           });
 
           response = NextResponse.next({
@@ -31,15 +33,15 @@ export async function updateSession(request: NextRequest) {
           response.cookies.set({
             name,
             value,
-            ...(options as object),
+            ...options,
           });
         },
 
-        remove(name: string, options: Record<string, unknown>) {
+        remove(name, options) {
           request.cookies.set({
             name,
             value: "",
-            ...(options as object),
+            ...options,
           });
 
           response = NextResponse.next({
@@ -49,7 +51,7 @@ export async function updateSession(request: NextRequest) {
           response.cookies.set({
             name,
             value: "",
-            ...(options as object),
+            ...options,
             maxAge: 0,
           });
         },
@@ -57,8 +59,12 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // Refresh expired sessions if needed.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  return response;
+  return {
+    response,
+    user,
+  };
 }

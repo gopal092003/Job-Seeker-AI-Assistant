@@ -44,7 +44,7 @@ export function useKeywords() {
 
       const { data, error } = await supabase
         .from("keywords")
-        .select("*")
+        .select("keyword, name")
         .in("keyword", keywordIds);
 
       if (error) {
@@ -54,7 +54,6 @@ export function useKeywords() {
       const mappedKeywords: Keyword[] = (data ?? []).map((item) => ({
         id: item.keyword,
         value: item.name,
-        userCount: item.user_ids?.length ?? 0,
       }));
 
       setKeywords(mappedKeywords);
@@ -75,31 +74,31 @@ export function useKeywords() {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-  
+
         if (!user) {
           throw new Error("User not authenticated");
         }
-  
+
         const normalizedKeyword = keyword.trim();
-  
+
         let keywordId: string;
-  
+
         const { data: existingKeyword, error: existingError } =
           await supabase
             .from("keywords")
-            .select("*")
+            .select("keyword")
             .eq("name", normalizedKeyword)
             .maybeSingle();
-  
+
         if (existingError) {
           throw existingError;
         }
-  
+
         if (existingKeyword) {
           keywordId = existingKeyword.keyword;
         } else {
           keywordId = crypto.randomUUID();
-  
+
           const { error: insertError } =
             await supabase
               .from("keywords")
@@ -107,12 +106,12 @@ export function useKeywords() {
                 keyword: keywordId,
                 name: normalizedKeyword,
               });
-  
+
           if (insertError) {
             throw insertError;
           }
         }
-  
+
         const {
           data: profile,
           error: profileError,
@@ -121,17 +120,14 @@ export function useKeywords() {
           .select("keywords")
           .eq("user_id", user.id)
           .single();
-  
+
         if (profileError) {
           throw profileError;
         }
-  
-        const currentKeywords =
-          profile?.keywords ?? [];
-  
-        if (
-          !currentKeywords.includes(keywordId)
-        ) {
+
+        const currentKeywords = profile?.keywords ?? [];
+
+        if (!currentKeywords.includes(keywordId)) {
           const { error: updateError } =
             await supabase
               .from("profiles")
@@ -142,22 +138,22 @@ export function useKeywords() {
                 ],
               })
               .eq("user_id", user.id);
-  
+
           if (updateError) {
             throw updateError;
           }
         }
-  
-        successToast(
-          "Keyword added successfully",
-        );
-  
+
+        successToast("Keyword added successfully");
+
         await fetchKeywords();
       } catch (error) {
         console.error("createKeyword error:", error);
-      
+
         errorToast(
-          "Unable to add keyword. Please try again.",
+          error instanceof Error
+            ? error.message
+            : "Unable to add keyword. Please try again.",
         );
       }
     },
@@ -170,11 +166,11 @@ export function useKeywords() {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-  
+
         if (!user) {
           throw new Error("User not authenticated");
         }
-  
+
         const {
           data: profile,
           error: profileError,
@@ -183,16 +179,16 @@ export function useKeywords() {
           .select("keywords")
           .eq("user_id", user.id)
           .single();
-  
+
         if (profileError) {
           throw profileError;
         }
-  
+
         const updatedKeywords =
           (profile?.keywords ?? []).filter(
             (id: string) => id !== keywordId,
           );
-  
+
         const { error: updateError } =
           await supabase
             .from("profiles")
@@ -200,18 +196,17 @@ export function useKeywords() {
               keywords: updatedKeywords,
             })
             .eq("user_id", user.id);
-  
+
         if (updateError) {
           throw updateError;
         }
-  
+
         setKeywords((current) =>
           current.filter(
-            (keyword) =>
-              keyword.id !== keywordId,
+            (keyword) => keyword.id !== keywordId,
           ),
         );
-  
+
         successToast(
           "Keyword removed successfully",
         );

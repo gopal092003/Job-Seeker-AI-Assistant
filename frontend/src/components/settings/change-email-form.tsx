@@ -49,7 +49,22 @@ export function ChangeEmailForm() {
         setLoading(true);
 
         const {
-          error,
+          data: { user },
+          error: authUserError,
+        } = await supabase.auth.getUser();
+
+        if (authUserError) {
+          throw authUserError;
+        }
+
+        if (!user) {
+          throw new Error(
+            "User not authenticated",
+          );
+        }
+
+        const {
+          error: authUpdateError,
         } = await supabase.auth.updateUser(
           {
             email:
@@ -57,8 +72,25 @@ export function ChangeEmailForm() {
           },
         );
 
-        if (error) {
-          throw error;
+        if (authUpdateError) {
+          throw authUpdateError;
+        }
+
+        const {
+          error: profileUpdateError,
+        } = await supabase
+          .from("profiles")
+          .update({
+            email:
+              newEmail.trim(),
+          })
+          .eq(
+            "user_id",
+            user.id,
+          );
+
+        if (profileUpdateError) {
+          throw profileUpdateError;
         }
 
         successToast(

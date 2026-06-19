@@ -1,3 +1,5 @@
+// src/hooks/use-education.ts
+
 "use client";
 
 import {
@@ -22,21 +24,21 @@ export function useEducation() {
   const [loading, setLoading] =
     useState(true);
 
-    const fetchEducation =
+  const fetchEducation =
     useCallback(async () => {
       try {
         setLoading(true);
-  
+
         const {
           data: { user },
         } =
           await supabase.auth.getUser();
-  
+
         if (!user) {
           setEducation([]);
           return;
         }
-  
+
         const {
           data: profile,
           error: profileError,
@@ -48,21 +50,21 @@ export function useEducation() {
             user.id,
           )
           .single();
-  
+
         if (profileError) {
           throw profileError;
         }
-  
+
         const educationIds =
           profile?.education ?? [];
-  
+
         if (
           educationIds.length === 0
         ) {
           setEducation([]);
           return;
         }
-  
+
         const {
           data: educationRows,
           error: educationError,
@@ -73,132 +75,165 @@ export function useEducation() {
             "education",
             educationIds,
           );
-  
+
         if (educationError) {
           throw educationError;
         }
-  
+
         const degreeIds = [
           ...new Set(
-            (educationRows ?? []).map(
-              (item) =>
-                item.degree,
-            ),
+            (educationRows ?? [])
+              .map(
+                (item) =>
+                  item.degree,
+              )
+              .filter(Boolean),
           ),
         ];
-  
+
         const instituteIds = [
           ...new Set(
-            (educationRows ?? []).map(
-              (item) =>
-                item.institute,
-            ),
+            (educationRows ?? [])
+              .map(
+                (item) =>
+                  item.institute,
+              )
+              .filter(Boolean),
           ),
         ];
-  
+
         const {
           data: degreesData,
           error: degreesError,
-        } = await supabase
-          .from("degrees")
-          .select(
-            "degree,name",
-          )
-          .in(
-            "degree",
-            degreeIds,
-          );
-  
+        } =
+          degreeIds.length > 0
+            ? await supabase
+                .from("degrees")
+                .select(
+                  "degree,name",
+                )
+                .in(
+                  "degree",
+                  degreeIds,
+                )
+            : {
+                data: [],
+                error: null,
+              };
+
         if (degreesError) {
           throw degreesError;
         }
-  
+
         const {
           data: institutesData,
           error:
             institutesError,
-        } = await supabase
-          .from("institutes")
-          .select(
-            "institute,name",
-          )
-          .in(
-            "institute",
-            instituteIds,
-          );
-  
+        } =
+          instituteIds.length > 0
+            ? await supabase
+                .from(
+                  "institutes",
+                )
+                .select(
+                  "institute,name",
+                )
+                .in(
+                  "institute",
+                  instituteIds,
+                )
+            : {
+                data: [],
+                error: null,
+              };
+
         if (
           institutesError
         ) {
           throw institutesError;
         }
-  
+
         const degreeMap =
           new Map(
             (
               degreesData ??
               []
-            ).map((degree) => [
-              degree.degree,
-              degree.name,
-            ]),
+            ).map(
+              (
+                degree: any,
+              ) => [
+                degree.degree,
+                degree.name,
+              ],
+            ),
           );
-  
+
         const instituteMap =
           new Map(
             (
               institutesData ??
               []
             ).map(
-              (institute) => [
+              (
+                institute: any,
+              ) => [
                 institute.institute,
                 institute.name,
               ],
             ),
           );
-  
+
         const mappedEducation: Education[] =
           (
             educationRows ??
             []
-          ).map((item) => ({
-            id:
-              item.education,
-  
-            degree:
-              item.degree,
-  
-            institute:
-              item.institute,
-  
-            degreeName:
-              degreeMap.get(
+          ).map(
+            (item: any) => ({
+              id:
+                item.education,
+
+              degree:
                 item.degree,
-              ) ??
-              "Unknown Degree",
-  
-            instituteName:
-              instituteMap.get(
+
+              institute:
                 item.institute,
-              ) ??
-              "Unknown Institute",
-  
-            cgpa:
-              item.cgpa,
-  
-            startDate:
-              item.start_date,
-  
-            endDate:
-              item.end_date,
-  
-            createdAt:
-              item.created_at,
-  
-            updatedAt:
-              item.updated_at,
-          }));
-  
+
+              degreeName:
+                degreeMap.get(
+                  item.degree,
+                ) ??
+                "Unknown Degree",
+
+              instituteName:
+                instituteMap.get(
+                  item.institute,
+                ) ??
+                "Unknown Institute",
+
+              cgpa:
+                item.cgpa !==
+                  null &&
+                item.cgpa !==
+                  undefined
+                  ? Number(
+                      item.cgpa,
+                    )
+                  : null,
+
+              startDate:
+                item.start_date,
+
+              endDate:
+                item.end_date,
+
+              createdAt:
+                item.created_at,
+
+              updatedAt:
+                item.updated_at,
+            }),
+          );
+
         setEducation(
           mappedEducation,
         );
@@ -207,7 +242,7 @@ export function useEducation() {
           "fetchEducation error:",
           error,
         );
-  
+
         errorToast(
           "Unable to load education.",
         );
@@ -221,88 +256,101 @@ export function useEducation() {
       async (
         degreeName: string,
       ) => {
-        const { data: existing } =
-          await supabase
-            .from("degrees")
-            .select("degree")
-            .eq(
-              "name",
-              degreeName.trim(),
-            )
-            .maybeSingle();
-  
+        const {
+          data: existing,
+        } = await supabase
+          .from("degrees")
+          .select("degree")
+          .eq(
+            "name",
+            degreeName.trim(),
+          )
+          .maybeSingle();
+
         if (existing) {
           return existing.degree;
         }
-  
+
         const degreeId =
           crypto.randomUUID();
-  
+
         const { error } =
           await supabase
             .from("degrees")
             .insert({
-              degree: degreeId,
+              degree:
+                degreeId,
               name: degreeName.trim(),
             });
-  
+
         if (error) {
           throw error;
         }
-  
+
         return degreeId;
       },
       [],
     );
-  
+
   const getOrCreateInstitute =
     useCallback(
       async (
         instituteName: string,
       ) => {
-        const { data: existing } =
-          await supabase
-            .from("institutes")
-            .select("institute")
-            .eq(
-              "name",
-              instituteName.trim(),
-            )
-            .maybeSingle();
-  
+        const {
+          data: existing,
+        } = await supabase
+          .from("institutes")
+          .select(
+            "institute",
+          )
+          .eq(
+            "name",
+            instituteName.trim(),
+          )
+          .maybeSingle();
+
         if (existing) {
           return existing.institute;
         }
-  
+
         const instituteId =
           crypto.randomUUID();
-  
+
         const { error } =
           await supabase
             .from("institutes")
             .insert({
               institute:
                 instituteId,
-              name: instituteName.trim(),
+              name:
+                instituteName.trim(),
             });
-  
+
         if (error) {
           throw error;
         }
-  
+
         return instituteId;
       },
       [],
     );
 
-  type CreateEducationInput = {
-    degree: string;
-    institute: string;
-    cgpa?: number | null;
-    startDate?: string | null;
-    endDate?: string | null;
-  };
-  
+  type CreateEducationInput =
+    {
+      degree: string;
+      institute: string;
+      cgpa?:
+        | number
+        | null;
+      startDate?:
+        | string
+        | null;
+      endDate?:
+        | string
+        | null;
+    };
+
   const createEducation =
     useCallback(
       async (
@@ -313,26 +361,26 @@ export function useEducation() {
             data: { user },
           } =
             await supabase.auth.getUser();
-  
+
           if (!user) {
             throw new Error(
               "User not authenticated",
             );
           }
-  
+
           const degreeId =
             await getOrCreateDegree(
               record.degree,
             );
-  
+
           const instituteId =
             await getOrCreateInstitute(
               record.institute,
             );
-  
+
           const educationId =
             crypto.randomUUID();
-  
+
           const {
             error: insertError,
           } = await supabase
@@ -340,26 +388,22 @@ export function useEducation() {
             .insert({
               education:
                 educationId,
-  
-              degree: degreeId,
-  
+              degree:
+                degreeId,
               institute:
                 instituteId,
-  
               cgpa:
                 record.cgpa,
-  
               start_date:
                 record.startDate,
-  
               end_date:
                 record.endDate,
             });
-  
+
           if (insertError) {
             throw insertError;
           }
-  
+
           const {
             data: profile,
             error: profileError,
@@ -371,41 +415,45 @@ export function useEducation() {
               user.id,
             )
             .single();
-  
+
           if (profileError) {
             throw profileError;
           }
-  
+
           const {
             error: updateError,
           } = await supabase
             .from("profiles")
             .update({
               education: [
-                ...(profile?.education ??
-                  []),
-                educationId,
+                ...new Set([
+                  ...(profile?.education ??
+                    []),
+                  educationId,
+                ]),
               ],
             })
             .eq(
               "user_id",
               user.id,
             );
-  
+
           if (updateError) {
             throw updateError;
           }
-  
+
           successToast(
             "Education added successfully",
           );
-  
+
           await fetchEducation();
         } catch (
           error: any
         ) {
-          console.error(error);
-  
+          console.error(
+            error,
+          );
+
           errorToast(
             error?.message ??
               "Unable to save education.",
@@ -492,7 +540,9 @@ export function useEducation() {
           }
 
           setEducation(
-            (current) =>
+            (
+              current,
+            ) =>
               current.filter(
                 (
                   item,

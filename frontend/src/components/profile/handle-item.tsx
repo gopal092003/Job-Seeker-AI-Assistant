@@ -3,6 +3,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+
 import {
   Card,
   CardContent,
@@ -12,8 +13,9 @@ import type { Handle } from "@/types/profile";
 
 interface HandleItemProps {
   handle: Handle;
+
   onDelete?: (
-    handleId: string,
+    platform: string,
   ) => void;
 }
 
@@ -44,7 +46,9 @@ export function HandleItem({
             size="sm"
             variant="destructive"
             onClick={() =>
-              onDelete(handle.id)
+              onDelete(
+                handle.platform,
+              )
             }
           >
             Delete

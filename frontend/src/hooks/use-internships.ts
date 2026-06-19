@@ -31,8 +31,7 @@ export function useInternships() {
 
         const {
           data: { user },
-        } =
-          await supabase.auth.getUser();
+        } = await supabase.auth.getUser();
 
         if (!user) {
           setInternships([]);
@@ -45,10 +44,7 @@ export function useInternships() {
         } = await supabase
           .from("profiles")
           .select("intern")
-          .eq(
-            "user_id",
-            user.id,
-          )
+          .eq("user_id", user.id)
           .single();
 
         if (profileError) {
@@ -87,16 +83,18 @@ export function useInternships() {
 
         const mappedInternships: Internship[] =
           (data ?? []).map(
-            (internship) => ({
+            (internship: any) => ({
               id:
                 internship.internship,
 
+              company:
+                internship.company,
+
               companyName:
-                internship
-                  .companies
+                internship.companies
                   ?.name ?? "",
 
-              role:
+              designation:
                 internship.designation,
 
               description:
@@ -130,15 +128,18 @@ export function useInternships() {
       }
     }, []);
 
+  type CreateInternshipInput = {
+    company: string;
+    designation: string;
+    description?: string;
+    startDate?: string;
+    endDate?: string;
+  };
+
   const createInternship =
     useCallback(
       async (
-        internship: Omit<
-          Internship,
-          | "id"
-          | "createdAt"
-          | "updatedAt"
-        >,
+        internship: CreateInternshipInput,
       ) => {
         try {
           const {
@@ -152,21 +153,39 @@ export function useInternships() {
             );
           }
 
+          if (
+            !internship.company?.trim()
+          ) {
+            throw new Error(
+              "Company name is required",
+            );
+          }
+
           let companyId: string;
 
           const {
-            data:
-              existingCompany,
+            data: existingCompany,
+            error:
+              companyLookupError,
           } = await supabase
             .from("companies")
-            .select(
-              "company",
-            )
+            .select("company")
             .eq(
               "name",
-              internship.companyName,
+              internship.company.trim(),
             )
             .maybeSingle();
+
+          if (
+            companyLookupError
+          ) {
+            console.error(
+              "Company lookup error:",
+              companyLookupError,
+            );
+
+            throw companyLookupError;
+          }
 
           if (
             existingCompany
@@ -178,22 +197,24 @@ export function useInternships() {
               crypto.randomUUID();
 
             const {
-              error:
-                companyError,
-            } =
-              await supabase
-                .from(
-                  "companies",
-                )
-                .insert({
-                  company:
-                    companyId,
-                  name: internship.companyName,
-                });
+              error: companyError,
+            } = await supabase
+              .from("companies")
+              .insert({
+                company:
+                  companyId,
+                name:
+                  internship.company.trim(),
+              });
 
             if (
               companyError
             ) {
+              console.error(
+                "Company insert error:",
+                companyError,
+              );
+
               throw companyError;
             }
           }
@@ -205,9 +226,7 @@ export function useInternships() {
             error:
               internshipError,
           } = await supabase
-            .from(
-              "internships",
-            )
+            .from("internships")
             .insert({
               internship:
                 internshipId,
@@ -216,21 +235,30 @@ export function useInternships() {
                 companyId,
 
               designation:
-                internship.role,
+                internship.designation ??
+                null,
 
               description:
-                internship.description,
+                internship.description ??
+                null,
 
               start_date:
-                internship.startDate,
+                internship.startDate ??
+                null,
 
               end_date:
-                internship.endDate,
+                internship.endDate ??
+                null,
             });
 
           if (
             internshipError
           ) {
+            console.error(
+              "Internship insert error:",
+              internshipError,
+            );
+
             throw internshipError;
           }
 
@@ -250,6 +278,11 @@ export function useInternships() {
           if (
             profileFetchError
           ) {
+            console.error(
+              "Profile fetch error:",
+              profileFetchError,
+            );
+
             throw profileFetchError;
           }
 
@@ -273,6 +306,11 @@ export function useInternships() {
           if (
             profileUpdateError
           ) {
+            console.error(
+              "Profile update error:",
+              profileUpdateError,
+            );
+
             throw profileUpdateError;
           }
 
@@ -282,6 +320,11 @@ export function useInternships() {
 
           await fetchInternships();
         } catch (error) {
+          console.error(
+            "Create internship error:",
+            error,
+          );
+
           errorToast(
             error instanceof Error
               ? error.message
@@ -313,9 +356,7 @@ export function useInternships() {
             error:
               internshipDeleteError,
           } = await supabase
-            .from(
-              "internships",
-            )
+            .from("internships")
             .delete()
             .eq(
               "internship",

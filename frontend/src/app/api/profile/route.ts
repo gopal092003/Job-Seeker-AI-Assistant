@@ -1,6 +1,9 @@
 // src/app/api/profile/route.ts
 
-import { NextRequest, NextResponse } from "next/server";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -8,12 +11,14 @@ import { profileSchema } from "@/lib/validators/profile";
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } =
+      await supabase.auth.getUser();
 
     if (authError) {
       throw authError;
@@ -22,7 +27,8 @@ export async function GET() {
     if (!user) {
       return NextResponse.json(
         {
-          message: "Unauthorized",
+          message:
+            "Unauthorized",
         },
         {
           status: 401,
@@ -36,7 +42,10 @@ export async function GET() {
     } = await supabase
       .from("profiles")
       .select("*")
-      .eq("user_id", user.id)
+      .eq(
+        "user_id",
+        user.id,
+      )
       .single();
 
     if (profileError) {
@@ -65,12 +74,14 @@ export async function PATCH(
   request: NextRequest,
 ) {
   try {
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } =
+      await supabase.auth.getUser();
 
     if (authError) {
       throw authError;
@@ -79,7 +90,8 @@ export async function PATCH(
     if (!user) {
       return NextResponse.json(
         {
-          message: "Unauthorized",
+          message:
+            "Unauthorized",
         },
         {
           status: 401,
@@ -90,31 +102,43 @@ export async function PATCH(
     const body =
       await request.json();
 
-    const validatedData =
-      profileSchema.parse(
+    const validated =
+      profileSchema.safeParse(
         body,
       );
 
-    const updatePayload = {
-      user_name:
-        validatedData.user_name,
-    
-      email:
-        validatedData.email,
-    
-      updated_at:
-        new Date().toISOString(),
-    };
+    if (!validated.success) {
+      return NextResponse.json(
+        {
+          message:
+            validated.error
+              .issues[0]
+              ?.message,
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    const {
+      name,
+      email,
+    } = validated.data;
 
     const {
       data: profile,
       error: updateError,
     } = await supabase
       .from("profiles")
-      .update(
-        updatePayload,
+      .update({
+        name,
+        email,
+      })
+      .eq(
+        "user_id",
+        user.id,
       )
-      .eq("user_id", user.id)
       .select()
       .single();
 

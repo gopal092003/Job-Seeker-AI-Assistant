@@ -1,13 +1,19 @@
 // src/app/api/internships/route.ts
 
-import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
+
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { internshipSchema } from "@/lib/validators/internship";
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
@@ -21,7 +27,8 @@ export async function GET() {
     if (!user) {
       return NextResponse.json(
         {
-          message: "Unauthorized",
+          message:
+            "Unauthorized",
         },
         {
           status: 401,
@@ -35,7 +42,10 @@ export async function GET() {
     } = await supabase
       .from("profiles")
       .select("intern")
-      .eq("user_id", user.id)
+      .eq(
+        "user_id",
+        user.id,
+      )
       .single();
 
     if (profileError) {
@@ -45,13 +55,18 @@ export async function GET() {
     const internshipIds =
       profile?.intern ?? [];
 
-    if (internshipIds.length === 0) {
-      return NextResponse.json([]);
+    if (
+      internshipIds.length === 0
+    ) {
+      return NextResponse.json(
+        [],
+      );
     }
 
     const {
       data: internships,
-      error: internshipsError,
+      error:
+        internshipsError,
     } = await supabase
       .from("internships")
       .select("*")
@@ -60,7 +75,9 @@ export async function GET() {
         internshipIds,
       );
 
-    if (internshipsError) {
+    if (
+      internshipsError
+    ) {
       throw internshipsError;
     }
 
@@ -86,7 +103,8 @@ export async function POST(
   request: NextRequest,
 ) {
   try {
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
@@ -100,7 +118,8 @@ export async function POST(
     if (!user) {
       return NextResponse.json(
         {
-          message: "Unauthorized",
+          message:
+            "Unauthorized",
         },
         {
           status: 401,
@@ -112,13 +131,18 @@ export async function POST(
       await request.json();
 
     const validated =
-      internshipSchema.safeParse(body);
+      internshipSchema.safeParse(
+        body,
+      );
 
-    if (!validated.success) {
+    if (
+      !validated.success
+    ) {
       return NextResponse.json(
         {
           message:
-            validated.error.issues[0]
+            validated.error
+              .issues[0]
               ?.message,
         },
         {
@@ -128,35 +152,52 @@ export async function POST(
     }
 
     const {
-      company_name,
-      role,
-      internship_links,
+      company,
+      designation,
       description,
+      startDate,
+      endDate,
     } = validated.data;
+
+    const internshipId =
+      randomUUID();
 
     const {
       data: internship,
-      error: internshipError,
+      error:
+        internshipError,
     } = await supabase
-      .from("internships")
+      .from(
+        "internships",
+      )
       .insert({
-        user_id: user.id,
+        internship:
+          internshipId,
 
-        company:
-          company_name,
+        company,
 
         designation:
-          role,
+          designation ??
+          null,
 
-        links:
-          internship_links,
+        description:
+          description ??
+          null,
 
-        description,
+        start_date:
+          startDate ??
+          null,
+
+        end_date:
+          endDate ??
+          null,
       })
       .select()
       .single();
 
-    if (internshipError) {
+    if (
+      internshipError
+    ) {
       throw internshipError;
     }
 
@@ -166,7 +207,10 @@ export async function POST(
     } = await supabase
       .from("profiles")
       .select("intern")
-      .eq("user_id", user.id)
+      .eq(
+        "user_id",
+        user.id,
+      )
       .single();
 
     if (profileError) {
@@ -174,7 +218,8 @@ export async function POST(
     }
 
     const currentInternships =
-      profile?.intern ?? [];
+      profile?.intern ??
+      [];
 
     const {
       error: updateError,
@@ -186,7 +231,10 @@ export async function POST(
           internship.internship,
         ],
       })
-      .eq("user_id", user.id);
+      .eq(
+        "user_id",
+        user.id,
+      );
 
     if (updateError) {
       throw updateError;

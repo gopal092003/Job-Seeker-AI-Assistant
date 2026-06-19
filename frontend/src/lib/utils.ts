@@ -5,19 +5,19 @@ import { twMerge } from "tailwind-merge";
 
 import { MIN_KEYWORDS_REQUIRED } from "@/lib/constants";
 
-/**
- * Merge Tailwind classes safely.
- */
-export function cn(...inputs: ClassValue[]) {
+/* =======================================================
+   STYLING
+   ======================================================= */
+
+export function cn(
+  ...inputs: ClassValue[]
+): string {
   return twMerge(clsx(inputs));
 }
 
-/**
- * Determines whether the agent can be started.
- */
-export function isAgentEnabled(keywordCount: number): boolean {
-  return keywordCount >= MIN_KEYWORDS_REQUIRED;
-}
+/* =======================================================
+   PROFILE VALIDATION
+   ======================================================= */
 
 /**
  * Checks whether a user has at least one keyword.
@@ -29,9 +29,47 @@ export function hasKeywords(
 }
 
 /**
- * Converts unknown errors into user-friendly messages.
+ * Determines whether the profile has enough
+ * keywords for job matching.
  */
-export function formatError(error: unknown): string {
+export function isProfileReady(
+  keywordCount: number,
+): boolean {
+  return keywordCount >= MIN_KEYWORDS_REQUIRED;
+}
+
+/**
+ * Checks whether all required profile
+ * fields are present.
+ */
+export function isProfileComplete({
+  name,
+  email,
+  keywordCount,
+}: {
+  name?: string | null;
+  email?: string | null;
+  keywordCount: number;
+}): boolean {
+  return (
+    !!name &&
+    !!email &&
+    keywordCount >=
+      MIN_KEYWORDS_REQUIRED
+  );
+}
+
+/* =======================================================
+   ERROR HANDLING
+   ======================================================= */
+
+/**
+ * Converts unknown errors into
+ * user-friendly messages.
+ */
+export function formatError(
+  error: unknown,
+): string {
   if (typeof error === "string") {
     return error;
   }

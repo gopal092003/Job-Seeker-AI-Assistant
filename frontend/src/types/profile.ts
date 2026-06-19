@@ -5,13 +5,9 @@ import type {
   KeywordRow,
 } from "@/types/database";
 
-export type AgentSettings = {
-  activeStartTime: string;
-
-  activeEndTime: string;
-
-  frequency: number;
-};
+/* =======================================================
+   PROJECT
+   ======================================================= */
 
 export type Project = {
   id: string;
@@ -20,13 +16,17 @@ export type Project = {
 
   links: string[];
 
-  description: string;
+  description: string | null;
 
   skills: string[];
 
   createdAt?: string;
   updatedAt?: string;
 };
+
+/* =======================================================
+   INTERNSHIP
+   ======================================================= */
 
 export type Internship = {
   id: string;
@@ -35,17 +35,20 @@ export type Internship = {
 
   companyName?: string;
 
-  designation: string;
+  designation: string | null;
 
-  description: string;
+  description: string | null;
 
   startDate?: string | null;
-
   endDate?: string | null;
 
   createdAt?: string;
   updatedAt?: string;
 };
+
+/* =======================================================
+   EDUCATION
+   ======================================================= */
 
 export type Education = {
   id: string;
@@ -61,35 +64,32 @@ export type Education = {
   cgpa: number | null;
 
   startDate?: string | null;
-
   endDate?: string | null;
 
   createdAt?: string;
-
   updatedAt?: string;
 };
+
+/* =======================================================
+   ACHIEVEMENT
+   ======================================================= */
 
 export type Achievement = {
   id: string;
 
-  description: string;
+  description: string | null;
 
-  proof: string;
+  proof: string | null;
 
-  createdAt?: string;
-  updatedAt?: string;
-};
-
-export type Handle = {
-  id: string;
-
-  platform: string;
-
-  url: string;
+  date?: string | null;
 
   createdAt?: string;
   updatedAt?: string;
 };
+
+/* =======================================================
+   PROFILE
+   ======================================================= */
 
 export type Profile = {
   id: string;
@@ -108,16 +108,31 @@ export type Profile = {
 
   achievementIds: string[];
 
-  handles: ProfileRow["handles"];
+  handles: Record<string, string>;
 };
+
+/* =======================================================
+   KEYWORD
+   ======================================================= */
 
 export type Keyword = {
   id: string;
 
   value: string;
-
-  userCount: number;
 };
+
+/* =======================================================
+   HANDLES
+   ======================================================= */
+
+export type Handle = {
+  platform: string;
+  url: string;
+};
+
+/* =======================================================
+   MAPPERS
+   ======================================================= */
 
 export function mapProfileRow(
   profile: ProfileRow,
@@ -145,7 +160,10 @@ export function mapProfileRow(
       profile.achievements ?? [],
 
     handles:
-      profile.handles ?? {},
+      (profile.handles as Record<
+        string,
+        string
+      >) ?? {},
   };
 }
 
@@ -156,8 +174,5 @@ export function mapKeywordRow(
     id: keyword.keyword,
 
     value: keyword.name,
-
-    userCount:
-      keyword.user_ids?.length ?? 0,
   };
 }

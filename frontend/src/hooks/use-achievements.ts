@@ -1,3 +1,5 @@
+// src/hooks/use-achievements.ts
+
 "use client";
 
 import {
@@ -94,6 +96,9 @@ export function useAchievements() {
               proof:
                 achievement.proof,
 
+              date:
+                achievement.date,
+
               createdAt:
                 achievement.created_at,
 
@@ -125,6 +130,7 @@ export function useAchievements() {
         achievement: {
           description: string;
           file: File;
+          date?: string;
         },
       ) => {
         try {
@@ -195,6 +201,10 @@ export function useAchievements() {
                 achievement.description,
 
               proof: proofUrl,
+
+              date:
+                achievement.date ??
+                null,
             });
 
           if (insertError) {
@@ -280,6 +290,8 @@ export function useAchievements() {
           const {
             data:
               achievement,
+            error:
+              achievementError,
           } = await supabase
             .from(
               "achievements",
@@ -292,6 +304,12 @@ export function useAchievements() {
               achievementId,
             )
             .single();
+
+          if (
+            achievementError
+          ) {
+            throw achievementError;
+          }
 
           if (
             achievement?.proof
@@ -321,7 +339,9 @@ export function useAchievements() {
             }
           }
 
-          await supabase
+          const {
+            error: deleteError,
+          } = await supabase
             .from(
               "achievements",
             )
@@ -331,8 +351,14 @@ export function useAchievements() {
               achievementId,
             );
 
+          if (deleteError) {
+            throw deleteError;
+          }
+
           const {
             data: profile,
+            error:
+              profileError,
           } = await supabase
             .from("profiles")
             .select(
@@ -344,7 +370,14 @@ export function useAchievements() {
             )
             .single();
 
-          await supabase
+          if (profileError) {
+            throw profileError;
+          }
+
+          const {
+            error:
+              updateError,
+          } = await supabase
             .from("profiles")
             .update({
               achievements: (
@@ -362,6 +395,10 @@ export function useAchievements() {
               "user_id",
               user.id,
             );
+
+          if (updateError) {
+            throw updateError;
+          }
 
           setAchievements(
             (

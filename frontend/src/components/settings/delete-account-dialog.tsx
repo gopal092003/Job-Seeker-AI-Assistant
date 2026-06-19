@@ -18,10 +18,9 @@ import {
   errorToast,
 } from "@/hooks/use-toast";
 
-import { supabase } from "@/lib/supabase/client";
-
 interface DeleteAccountDialogProps {
   open?: boolean;
+
   onOpenChange?: (
     open: boolean,
   ) => void;
@@ -32,6 +31,11 @@ export function DeleteAccountDialog({
   onOpenChange,
 }: DeleteAccountDialogProps) {
   const [
+    internalOpen,
+    setInternalOpen,
+  ] = useState(false);
+
+  const [
     confirmationText,
     setConfirmationText,
   ] = useState("");
@@ -39,10 +43,28 @@ export function DeleteAccountDialog({
   const [loading, setLoading] =
     useState(false);
 
+  const isControlled =
+    open !== undefined;
+
+  const dialogOpen =
+    isControlled
+      ? open
+      : internalOpen;
+
+  const setDialogOpen = (
+    value: boolean,
+  ) => {
+    if (isControlled) {
+      onOpenChange?.(value);
+    } else {
+      setInternalOpen(value);
+    }
+  };
+
   const closeDialog = () => {
     setConfirmationText("");
 
-    onOpenChange?.(false);
+    setDialogOpen(false);
   };
 
   const confirmDelete =
@@ -96,9 +118,9 @@ export function DeleteAccountDialog({
 
   return (
     <Dialog
-      open={open}
+      open={dialogOpen}
       onOpenChange={
-        onOpenChange
+        setDialogOpen
       }
     >
       <DialogTrigger asChild>
@@ -168,9 +190,7 @@ export function DeleteAccountDialog({
               onClick={
                 confirmDelete
               }
-              disabled={
-                loading
-              }
+              disabled={loading}
             >
               {loading
                 ? "Deleting..."

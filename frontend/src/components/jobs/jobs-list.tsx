@@ -12,7 +12,7 @@ interface JobsListProps {
   jobs: Job[];
 
   onSelect?: (
-    jobId: string,
+    jobLink: string,
   ) => void;
 
   onOpen?: (
@@ -73,7 +73,7 @@ export function JobsList({
           (job) => (
             <JobCard
               key={
-                job.job_uuid
+                job.job_link
               }
               job={job}
               onSelect={

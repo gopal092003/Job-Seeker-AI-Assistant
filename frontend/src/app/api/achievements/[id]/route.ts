@@ -18,12 +18,14 @@ export async function DELETE(
     const { id: achievementId } =
       await params;
 
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } =
+      await supabase.auth.getUser();
 
     if (authError) {
       throw authError;
@@ -32,7 +34,8 @@ export async function DELETE(
     if (!user) {
       return NextResponse.json(
         {
-          message: "Unauthorized",
+          message:
+            "Unauthorized",
         },
         {
           status: 401,
@@ -45,34 +48,62 @@ export async function DELETE(
       error: profileError,
     } = await supabase
       .from("profiles")
-      .select("achievements")
-      .eq("user_id", user.id)
+      .select(
+        "achievements",
+      )
+      .eq(
+        "user_id",
+        user.id,
+      )
       .single();
 
-    if (profileError) {
+    if (
+      profileError
+    ) {
       throw profileError;
+    }
+
+    const currentAchievements =
+      profile?.achievements ??
+      [];
+
+    if (
+      !currentAchievements.includes(
+        achievementId,
+      )
+    ) {
+      return NextResponse.json(
+        {
+          message:
+            "Achievement not found",
+        },
+        {
+          status: 404,
+        },
+      );
     }
 
     const {
       error: deleteError,
     } = await supabase
-      .from("achievements")
+      .from(
+        "achievements",
+      )
       .delete()
       .eq(
-        "achievement_id",
+        "achievement",
         achievementId,
-      )
-      .eq("user_id", user.id);
+      );
 
-    if (deleteError) {
+    if (
+      deleteError
+    ) {
       throw deleteError;
     }
 
-    const currentAchievements =
-      profile?.achievements ?? [];
-
     const {
-      error: updateError,
+      error:
+        updateError,
     } = await supabase
       .from("profiles")
       .update({
@@ -81,18 +112,29 @@ export async function DELETE(
             (
               id: string,
             ) =>
-              id !== achievementId,
+              id !==
+              achievementId,
           ),
       })
-      .eq("user_id", user.id);
+      .eq(
+        "user_id",
+        user.id,
+      );
 
-    if (updateError) {
+    if (
+      updateError
+    ) {
       throw updateError;
     }
 
-    return NextResponse.json({
-      success: true,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+      },
+      {
+        status: 200,
+      },
+    );
   } catch (error) {
     return NextResponse.json(
       {

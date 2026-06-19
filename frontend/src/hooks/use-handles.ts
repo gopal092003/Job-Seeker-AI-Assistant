@@ -1,3 +1,5 @@
+// src/hooks/use-handles.ts
+
 "use client";
 
 import {
@@ -60,12 +62,8 @@ export function useHandles() {
             handlesObject,
           ).map(
             ([platform, url]) => ({
-              id: platform,
               platform,
               url,
-
-              createdAt: "",
-              updatedAt: "",
             }),
           );
 
@@ -89,12 +87,7 @@ export function useHandles() {
   const createHandle =
     useCallback(
       async (
-        handle: Omit<
-          Handle,
-          | "id"
-          | "createdAt"
-          | "updatedAt"
-        >,
+        handle: Handle,
       ) => {
         try {
           const {

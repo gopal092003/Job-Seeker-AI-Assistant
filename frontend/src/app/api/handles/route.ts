@@ -41,27 +41,8 @@ export async function GET() {
       throw profileError;
     }
 
-    const handleIds =
-      profile?.handles ?? [];
-
-    if (handleIds.length === 0) {
-      return NextResponse.json([]);
-    }
-
-    const {
-      data: handles,
-      error: handlesError,
-    } = await supabase
-      .from("handles")
-      .select("*")
-      .in("handle_id", handleIds);
-
-    if (handlesError) {
-      throw handlesError;
-    }
-
     return NextResponse.json(
-      handles,
+      profile?.handles ?? {},
     );
   } catch (error) {
     return NextResponse.json(
@@ -108,15 +89,15 @@ export async function POST(
       await request.json();
 
     const {
-      handle_name,
-      handle_link,
+      platform,
+      url,
     } = body;
 
-    if (!handle_name?.trim()) {
+    if (!platform?.trim()) {
       return NextResponse.json(
         {
           message:
-            "Handle name is required",
+            "Platform is required",
         },
         {
           status: 400,
@@ -124,11 +105,11 @@ export async function POST(
       );
     }
 
-    if (!handle_link?.trim()) {
+    if (!url?.trim()) {
       return NextResponse.json(
         {
           message:
-            "Handle link is required",
+            "URL is required",
         },
         {
           status: 400,
@@ -137,37 +118,17 @@ export async function POST(
     }
 
     try {
-      new URL(handle_link);
+      new URL(url);
     } catch {
       return NextResponse.json(
         {
           message:
-            "Handle link must be a valid URL",
+            "URL must be valid",
         },
         {
           status: 400,
         },
       );
-    }
-
-    const {
-      data: handle,
-      error: handleError,
-    } = await supabase
-      .from("handles")
-      .insert({
-        user_id: user.id,
-
-        platform:
-          handle_name,
-
-        url: handle_link,
-      })
-      .select()
-      .single();
-
-    if (handleError) {
-      throw handleError;
     }
 
     const {
@@ -184,19 +145,29 @@ export async function POST(
     }
 
     const currentHandles =
-      profile?.handles ?? [];
+      (profile?.handles as Record<
+        string,
+        string
+      >) ?? {};
+
+    const updatedHandles = {
+      ...currentHandles,
+      [platform.trim()]:
+        url.trim(),
+    };
 
     const {
       error: updateError,
     } = await supabase
       .from("profiles")
       .update({
-        handles: [
-          ...currentHandles,
-          handle.handle_id,
-        ],
+        handles:
+          updatedHandles,
       })
-      .eq("user_id", user.id);
+      .eq(
+        "user_id",
+        user.id,
+      );
 
     if (updateError) {
       throw updateError;
@@ -205,7 +176,11 @@ export async function POST(
     return NextResponse.json(
       {
         success: true,
-        handle,
+        handle: {
+          platform:
+            platform.trim(),
+          url: url.trim(),
+        },
       },
       {
         status: 201,
@@ -252,14 +227,15 @@ export async function DELETE(
       );
     }
 
-    const { handle_id } =
-      await request.json();
+    const {
+      platform,
+    } = await request.json();
 
-    if (!handle_id) {
+    if (!platform) {
       return NextResponse.json(
         {
           message:
-            "Handle ID is required",
+            "Platform is required",
         },
         {
           status: 400,
@@ -280,23 +256,19 @@ export async function DELETE(
       throw profileError;
     }
 
-    const {
-      error: deleteError,
-    } = await supabase
-      .from("handles")
-      .delete()
-      .eq(
-        "handle_id",
-        handle_id,
-      )
-      .eq("user_id", user.id);
-
-    if (deleteError) {
-      throw deleteError;
-    }
-
     const currentHandles =
-      profile?.handles ?? [];
+      (profile?.handles as Record<
+        string,
+        string
+      >) ?? {};
+
+    const updatedHandles = {
+      ...currentHandles,
+    };
+
+    delete updatedHandles[
+      platform
+    ];
 
     const {
       error: updateError,
@@ -304,13 +276,12 @@ export async function DELETE(
       .from("profiles")
       .update({
         handles:
-          currentHandles.filter(
-            (
-              id: string,
-            ) => id !== handle_id,
-          ),
+          updatedHandles,
       })
-      .eq("user_id", user.id);
+      .eq(
+        "user_id",
+        user.id,
+      );
 
     if (updateError) {
       throw updateError;

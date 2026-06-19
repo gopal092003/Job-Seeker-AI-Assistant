@@ -16,7 +16,7 @@ interface JobCardProps {
   job: Job;
 
   onSelect?: (
-    jobId: string,
+    jobLink: string,
   ) => void;
 
   onOpen?: (
@@ -30,9 +30,15 @@ export function JobCard({
   onOpen,
 }: JobCardProps) {
   const postedDate =
-    new Date(
-      job.posted_at,
-    ).toLocaleDateString();
+    job.posted_time
+      ? new Date(
+          job.posted_time,
+        ).toLocaleDateString()
+      : "Unknown";
+
+  const contactFound =
+    job.mail ||
+    job.number;
 
   return (
     <Card>
@@ -61,13 +67,13 @@ export function JobCard({
 
           <div className="flex flex-col items-end gap-2">
             <Badge>
-              {job.is_selected
+              {job.selected
                 ? "Selected"
                 : "Not Selected"}
             </Badge>
 
             <Badge>
-              {job.contact_found
+              {contactFound
                 ? "Contact Found"
                 : "No Contact"}
             </Badge>
@@ -78,17 +84,17 @@ export function JobCard({
           <Button
             size="sm"
             variant={
-              job.is_selected
+              job.selected
                 ? "secondary"
                 : "default"
             }
             onClick={() =>
               onSelect?.(
-                job.job_uuid,
+                job.job_link,
               )
             }
           >
-            {job.is_selected
+            {job.selected
               ? "Selected"
               : "Select"}
           </Button>

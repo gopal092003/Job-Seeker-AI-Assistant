@@ -1,5 +1,3 @@
-// src/components/profile/internship-form.tsx
-
 "use client";
 
 import { useState } from "react";
@@ -12,8 +10,8 @@ import { errorToast } from "@/hooks/use-toast";
 
 interface InternshipFormProps {
   onSubmit: (internship: {
-    companyName: string;
-    role: string;
+    company: string;
+    designation: string;
     description: string;
     startDate?: string;
     endDate?: string;
@@ -23,10 +21,10 @@ interface InternshipFormProps {
 export function InternshipForm({
   onSubmit,
 }: InternshipFormProps) {
-  const [companyName, setCompanyName] =
+  const [company, setCompany] =
     useState("");
 
-  const [role, setRole] =
+  const [designation, setDesignation] =
     useState("");
 
   const [startDate, setStartDate] =
@@ -47,27 +45,26 @@ export function InternshipForm({
     event.preventDefault();
 
     try {
-      if (
-        !companyName.trim()
-      ) {
+      if (!company.trim()) {
         throw new Error(
           "Company name is required",
         );
       }
 
-      if (!role.trim()) {
+      if (!designation.trim()) {
         throw new Error(
-          "Role is required",
+          "Designation is required",
         );
       }
 
       setLoading(true);
 
       await onSubmit({
-        companyName:
-          companyName.trim(),
+        company:
+          company.trim(),
 
-        role: role.trim(),
+        designation:
+          designation.trim(),
 
         description:
           description.trim(),
@@ -79,8 +76,8 @@ export function InternshipForm({
           endDate || undefined,
       });
 
-      setCompanyName("");
-      setRole("");
+      setCompany("");
+      setDesignation("");
       setStartDate("");
       setEndDate("");
       setDescription("");
@@ -101,20 +98,20 @@ export function InternshipForm({
       className="space-y-4"
     >
       <Input
-        value={companyName}
+        value={company}
         placeholder="Company Name"
         onChange={(e) =>
-          setCompanyName(
+          setCompany(
             e.target.value,
           )
         }
       />
 
       <Input
-        value={role}
-        placeholder="Role / Designation"
+        value={designation}
+        placeholder="Designation"
         onChange={(e) =>
-          setRole(
+          setDesignation(
             e.target.value,
           )
         }

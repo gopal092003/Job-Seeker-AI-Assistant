@@ -56,7 +56,7 @@ export async function GET() {
       .from("achievements")
       .select("*")
       .in(
-        "achievement_id",
+        "achievement",
         achievementIds,
       );
 
@@ -86,12 +86,14 @@ export async function POST(
   request: NextRequest,
 ) {
   try {
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } =
+      await supabase.auth.getUser();
 
     if (authError) {
       throw authError;
@@ -100,7 +102,8 @@ export async function POST(
     if (!user) {
       return NextResponse.json(
         {
-          message: "Unauthorized",
+          message:
+            "Unauthorized",
         },
         {
           status: 401,
@@ -112,13 +115,18 @@ export async function POST(
       await request.json();
 
     const validated =
-      achievementSchema.safeParse(body);
+      achievementSchema.safeParse(
+        body,
+      );
 
-    if (!validated.success) {
+    if (
+      !validated.success
+    ) {
       return NextResponse.json(
         {
           message:
-            validated.error.issues[0]
+            validated.error
+              .issues[0]
               ?.message,
         },
         {
@@ -128,60 +136,82 @@ export async function POST(
     }
 
     const {
-      achievement_description,
-      achievement_proof,
+      description,
+      proof,
+      date,
     } = validated.data;
 
     const {
       data: achievement,
-      error: achievementError,
+      error:
+        achievementError,
     } = await supabase
-      .from("achievements")
+      .from(
+        "achievements",
+      )
       .insert({
-        user_id: user.id,
-
-        description:
-          achievement_description,
+        description,
 
         proof:
-          achievement_proof,
+          proof || null,
+
+        date:
+          date || null,
       })
       .select()
       .single();
 
-    if (achievementError) {
+    if (
+      achievementError
+    ) {
       throw achievementError;
     }
 
     const {
       data: profile,
-      error: profileError,
+      error:
+        profileError,
     } = await supabase
       .from("profiles")
-      .select("achievements")
-      .eq("user_id", user.id)
+      .select(
+        "achievements",
+      )
+      .eq(
+        "user_id",
+        user.id,
+      )
       .single();
 
-    if (profileError) {
+    if (
+      profileError
+    ) {
       throw profileError;
     }
 
     const currentAchievements =
-      profile?.achievements ?? [];
+      profile?.achievements ??
+      [];
 
     const {
-      error: updateError,
+      error:
+        updateError,
     } = await supabase
       .from("profiles")
       .update({
-        achievements: [
-          ...currentAchievements,
-          achievement.achievement_id,
-        ],
+        achievements:
+          [
+            ...currentAchievements,
+            achievement.achievement,
+          ],
       })
-      .eq("user_id", user.id);
+      .eq(
+        "user_id",
+        user.id,
+      );
 
-    if (updateError) {
+    if (
+      updateError
+    ) {
       throw updateError;
     }
 
@@ -198,7 +228,8 @@ export async function POST(
     return NextResponse.json(
       {
         message:
-          error instanceof Error
+          error instanceof
+          Error
             ? error.message
             : "Failed to create achievement",
       },

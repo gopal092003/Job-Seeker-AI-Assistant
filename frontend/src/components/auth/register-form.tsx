@@ -41,7 +41,7 @@ export function RegisterForm() {
 
       const validated =
         profileSchema.safeParse({
-          user_name: username,
+          name: username,
           email,
         });
 
@@ -92,7 +92,9 @@ export function RegisterForm() {
         value={username}
         placeholder="User Name"
         onChange={(e) =>
-          setUsername(e.target.value)
+          setUsername(
+            e.target.value,
+          )
         }
         required
       />
@@ -102,7 +104,9 @@ export function RegisterForm() {
         value={email}
         placeholder="Email Address"
         onChange={(e) =>
-          setEmail(e.target.value)
+          setEmail(
+            e.target.value,
+          )
         }
         required
       />
@@ -112,7 +116,9 @@ export function RegisterForm() {
         value={password}
         placeholder="Password"
         onChange={(e) =>
-          setPassword(e.target.value)
+          setPassword(
+            e.target.value,
+          )
         }
         required
       />

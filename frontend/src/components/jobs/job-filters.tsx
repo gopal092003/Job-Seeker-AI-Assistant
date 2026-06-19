@@ -7,11 +7,11 @@ import { useState } from "react";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 
-import type { JobFilters as JobFiltersType } from "@/types/jobs";
+import type { JobFlags } from "@/types/jobs";
 
 interface JobFiltersProps {
   onApply: (
-    filters: JobFiltersType,
+    filters: JobFlags,
   ) => void;
 }
 
@@ -31,15 +31,15 @@ export function JobFilters({
   const applyFilters =
     () => {
       onApply({
-        is_selected:
+        selected:
           selectedOnly
             ? true
             : undefined,
 
-        contact_found:
-          contactOnly
-            ? true
-            : undefined,
+        ...(contactOnly && {
+          mail: true,
+          number: true,
+        }),
       });
     };
 
@@ -57,7 +57,9 @@ export function JobFilters({
       <Toggle
         pressed={selectedOnly}
         onClick={() =>
-          setSelectedOnly((prev) => !prev)
+          setSelectedOnly(
+            (prev) => !prev,
+          )
         }
       >
         Selected Only
@@ -66,7 +68,9 @@ export function JobFilters({
       <Toggle
         pressed={contactOnly}
         onClick={() =>
-          setContactOnly((prev) => !prev)
+          setContactOnly(
+            (prev) => !prev,
+          )
         }
       >
         Contact Found

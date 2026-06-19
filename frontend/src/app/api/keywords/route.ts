@@ -1,31 +1,53 @@
 // src/app/api/keywords/route.ts
 
-import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
+
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { keywordSchema } from "@/lib/validators/keyword";
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+      error: authError,
+    } =
+      await supabase.auth.getUser();
+
+    if (authError) {
+      throw authError;
+    }
 
     if (!user) {
       return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 },
+        {
+          message:
+            "Unauthorized",
+        },
+        {
+          status: 401,
+        },
       );
     }
 
-    const { data: profile, error: profileError } =
-      await supabase
-        .from("profiles")
-        .select("keywords")
-        .eq("user_id", user.id)
-        .single();
+    const {
+      data: profile,
+      error: profileError,
+    } = await supabase
+      .from("profiles")
+      .select("keywords")
+      .eq(
+        "user_id",
+        user.id,
+      )
+      .single();
 
     if (profileError) {
       throw profileError;
@@ -34,20 +56,32 @@ export async function GET() {
     const keywordIds =
       profile?.keywords ?? [];
 
-    if (keywordIds.length === 0) {
-      return NextResponse.json([]);
+    if (
+      keywordIds.length === 0
+    ) {
+      return NextResponse.json(
+        [],
+      );
     }
 
-    const { data, error } = await supabase
+    const {
+      data,
+      error,
+    } = await supabase
       .from("keywords")
       .select("*")
-      .in("keyword", keywordIds);
+      .in(
+        "keyword",
+        keywordIds,
+      );
 
     if (error) {
       throw error;
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(
+      data ?? [],
+    );
   } catch (error) {
     return NextResponse.json(
       {
@@ -67,16 +101,28 @@ export async function POST(
   request: NextRequest,
 ) {
   try {
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+      error: authError,
+    } =
+      await supabase.auth.getUser();
+
+    if (authError) {
+      throw authError;
+    }
 
     if (!user) {
       return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 },
+        {
+          message:
+            "Unauthorized",
+        },
+        {
+          status: 401,
+        },
       );
     }
 
@@ -84,13 +130,16 @@ export async function POST(
       await request.json();
 
     const validated =
-      keywordSchema.safeParse(body);
+      keywordSchema.safeParse(
+        body,
+      );
 
     if (!validated.success) {
       return NextResponse.json(
         {
           message:
-            validated.error.issues[0]
+            validated.error
+              .issues[0]
               ?.message,
         },
         {
@@ -100,79 +149,109 @@ export async function POST(
     }
 
     const keywordName =
-      validated.data.keyword.trim();
+      validated.data.name;
 
-    const { data: existingKeyword } =
-      await supabase
-        .from("keywords")
-        .select("*")
-        .eq("name", keywordName)
-        .maybeSingle();
+    let keywordId =
+      "";
 
-    let keywordId: string;
+    const {
+      data:
+        existingKeyword,
+    } = await supabase
+      .from("keywords")
+      .select("*")
+      .eq(
+        "name",
+        keywordName,
+      )
+      .maybeSingle();
 
-    if (existingKeyword) {
+    if (
+      existingKeyword
+    ) {
       keywordId =
         existingKeyword.keyword;
-
-      await supabase
-        .from("keywords")
-        .update({
-          user_ids: Array.from(
-            new Set([
-              ...(existingKeyword.user_ids ??
-                []),
-              user.id,
-            ]),
-          ),
-        })
-        .eq(
-          "keyword",
-          existingKeyword.keyword,
-        );
     } else {
-      const { data, error } =
-        await supabase
-          .from("keywords")
-          .insert({
-            name: keywordName,
-            user_ids: [user.id],
-          })
-          .select()
-          .single();
+      const {
+        data,
+        error,
+      } = await supabase
+        .from("keywords")
+        .insert({
+          keyword:
+            randomUUID(),
+
+          name:
+            keywordName,
+        })
+        .select()
+        .single();
 
       if (error) {
         throw error;
       }
 
-      keywordId = data.keyword;
+      keywordId =
+        data.keyword;
     }
 
-    const { data: profile } =
-      await supabase
-        .from("profiles")
-        .select("keywords")
-        .eq("user_id", user.id)
-        .single();
+    const {
+      data: profile,
+      error:
+        profileError,
+    } = await supabase
+      .from("profiles")
+      .select("keywords")
+      .eq(
+        "user_id",
+        user.id,
+      )
+      .single();
+
+    if (
+      profileError
+    ) {
+      throw profileError;
+    }
 
     const currentKeywords =
-      profile?.keywords ?? [];
+      profile?.keywords ??
+      [];
 
-    await supabase
+    const {
+      error:
+        updateError,
+    } = await supabase
       .from("profiles")
       .update({
-        keywords: Array.from(
-          new Set([
-            ...currentKeywords,
-            keywordId,
-          ]),
-        ),
+        keywords:
+          Array.from(
+            new Set([
+              ...currentKeywords,
+              keywordId,
+            ]),
+          ),
       })
-      .eq("user_id", user.id);
+      .eq(
+        "user_id",
+        user.id,
+      );
 
-    return NextResponse.json({
-      success: true,
-    });
+    if (
+      updateError
+    ) {
+      throw updateError;
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        keywordId,
+      },
+      {
+        status: 201,
+      },
+    );
   } catch (error) {
     return NextResponse.json(
       {
@@ -192,23 +271,39 @@ export async function DELETE(
   request: NextRequest,
 ) {
   try {
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+      error: authError,
+    } =
+      await supabase.auth.getUser();
+
+    if (authError) {
+      throw authError;
+    }
 
     if (!user) {
       return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 },
+        {
+          message:
+            "Unauthorized",
+        },
+        {
+          status: 401,
+        },
       );
     }
 
-    const { keywordId } =
+    const {
+      keywordId,
+    } =
       await request.json();
 
-    if (!keywordId) {
+    if (
+      !keywordId
+    ) {
       return NextResponse.json(
         {
           message:
@@ -220,67 +315,59 @@ export async function DELETE(
       );
     }
 
-    const { data: profile } =
-      await supabase
-        .from("profiles")
-        .select("keywords")
-        .eq("user_id", user.id)
-        .single();
-
-    await supabase
+    const {
+      data: profile,
+      error:
+        profileError,
+    } = await supabase
       .from("profiles")
-      .update({
-        keywords: (
-          profile?.keywords ?? []
-        ).filter(
-          (id: string) =>
-            id !== keywordId,
-        ),
-      })
-      .eq("user_id", user.id);
+      .select("keywords")
+      .eq(
+        "user_id",
+        user.id,
+      )
+      .single();
 
-    const { data: keyword } =
-      await supabase
-        .from("keywords")
-        .select("*")
-        .eq("keyword", keywordId)
-        .single();
-
-    if (keyword) {
-      const remainingUsers = (
-        keyword.user_ids ?? []
-      ).filter(
-        (id: string) =>
-          id !== user.id,
-      );
-
-      if (
-        remainingUsers.length === 0
-      ) {
-        await supabase
-          .from("keywords")
-          .delete()
-          .eq(
-            "keyword",
-            keywordId,
-          );
-      } else {
-        await supabase
-          .from("keywords")
-          .update({
-            user_ids:
-              remainingUsers,
-          })
-          .eq(
-            "keyword",
-            keywordId,
-          );
-      }
+    if (
+      profileError
+    ) {
+      throw profileError;
     }
 
-    return NextResponse.json({
-      success: true,
-    });
+    const {
+      error:
+        updateError,
+    } = await supabase
+      .from("profiles")
+      .update({
+        keywords:
+          (
+            profile?.keywords ??
+            []
+          ).filter(
+            (
+              id: string,
+            ) =>
+              id !==
+              keywordId,
+          ),
+      })
+      .eq(
+        "user_id",
+        user.id,
+      );
+
+    if (
+      updateError
+    ) {
+      throw updateError;
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+      },
+    );
   } catch (error) {
     return NextResponse.json(
       {

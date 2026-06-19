@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
@@ -20,7 +21,8 @@ export async function GET() {
     if (!user) {
       return NextResponse.json(
         {
-          message: "Unauthorized",
+          message:
+            "Unauthorized",
         },
         {
           status: 401,
@@ -33,19 +35,13 @@ export async function GET() {
       error: jobsError,
     } = await supabase
       .from("jobs")
-      .select(
-        `
-          job_uuid,
-          job_link,
-          posted_at,
-          description,
-          contact_found,
-          is_selected
-        `,
+      .select("*")
+      .eq(
+        "user_id",
+        user.id,
       )
-      .eq("user_id", user.id)
       .order(
-        "posted_at",
+        "posted_time",
         {
           ascending: false,
         },

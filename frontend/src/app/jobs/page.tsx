@@ -4,7 +4,6 @@
 
 import { PageShell } from "@/components/layout/page-shell";
 
-import { JobFilters } from "@/components/jobs/job-filters";
 import { JobsList } from "@/components/jobs/jobs-list";
 
 import { useJobs } from "@/hooks/use-jobs";
@@ -14,8 +13,6 @@ export default function JobsPage() {
     jobs,
     loading,
     error,
-
-    applyFilters,
   } = useJobs();
 
   if (loading) {
@@ -32,12 +29,6 @@ export default function JobsPage() {
             </p>
           </div>
         )}
-
-        <JobFilters
-          onApply={
-            applyFilters
-          }
-        />
 
         <JobsList jobs={jobs} />
       </div>

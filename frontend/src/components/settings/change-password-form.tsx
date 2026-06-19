@@ -16,11 +16,6 @@ import { supabase } from "@/lib/supabase/client";
 
 export function ChangePasswordForm() {
   const [
-    currentPassword,
-    setCurrentPassword,
-  ] = useState("");
-
-  const [
     newPassword,
     setNewPassword,
   ] = useState("");
@@ -35,12 +30,6 @@ export function ChangePasswordForm() {
 
   const validatePasswords =
     () => {
-      if (!currentPassword.trim()) {
-        throw new Error(
-          "Current password is required",
-        );
-      }
-
       if (
         newPassword.length < 8
       ) {
@@ -55,15 +44,6 @@ export function ChangePasswordForm() {
       ) {
         throw new Error(
           "Passwords do not match",
-        );
-      }
-
-      if (
-        currentPassword ===
-        newPassword
-      ) {
-        throw new Error(
-          "New password must be different from current password",
         );
       }
 
@@ -98,7 +78,6 @@ export function ChangePasswordForm() {
           "Password updated successfully",
         );
 
-        setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
       } catch (error) {
@@ -119,19 +98,6 @@ export function ChangePasswordForm() {
       }
       className="space-y-4"
     >
-      <Input
-        type="password"
-        value={
-          currentPassword
-        }
-        placeholder="Current Password"
-        onChange={(e) =>
-          setCurrentPassword(
-            e.target.value,
-          )
-        }
-      />
-
       <Input
         type="password"
         value={newPassword}

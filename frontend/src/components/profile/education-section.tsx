@@ -1,3 +1,5 @@
+// src/components/profile/education-section.tsx
+
 "use client";
 
 import { useState } from "react";

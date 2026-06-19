@@ -1,18 +1,25 @@
 // src/app/api/projects/route.ts
 
-import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
+
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { projectSchema } from "@/lib/validators/project";
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } =
+      await supabase.auth.getUser();
 
     if (authError) {
       throw authError;
@@ -21,7 +28,8 @@ export async function GET() {
     if (!user) {
       return NextResponse.json(
         {
-          message: "Unauthorized",
+          message:
+            "Unauthorized",
         },
         {
           status: 401,
@@ -29,22 +37,31 @@ export async function GET() {
       );
     }
 
-    const { data: profile, error } =
-      await supabase
-        .from("profiles")
-        .select("projects")
-        .eq("user_id", user.id)
-        .single();
+    const {
+      data: profile,
+      error: profileError,
+    } = await supabase
+      .from("profiles")
+      .select("projects")
+      .eq(
+        "user_id",
+        user.id,
+      )
+      .single();
 
-    if (error) {
-      throw error;
+    if (profileError) {
+      throw profileError;
     }
 
     const projectIds =
       profile?.projects ?? [];
 
-    if (projectIds.length === 0) {
-      return NextResponse.json([]);
+    if (
+      projectIds.length === 0
+    ) {
+      return NextResponse.json(
+        [],
+      );
     }
 
     const {
@@ -53,14 +70,17 @@ export async function GET() {
     } = await supabase
       .from("projects")
       .select("*")
-      .in("project", projectIds);
+      .in(
+        "project",
+        projectIds,
+      );
 
     if (projectsError) {
       throw projectsError;
     }
 
     return NextResponse.json(
-      projects,
+      projects ?? [],
     );
   } catch (error) {
     return NextResponse.json(
@@ -81,12 +101,14 @@ export async function POST(
   request: NextRequest,
 ) {
   try {
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } =
+      await supabase.auth.getUser();
 
     if (authError) {
       throw authError;
@@ -95,7 +117,8 @@ export async function POST(
     if (!user) {
       return NextResponse.json(
         {
-          message: "Unauthorized",
+          message:
+            "Unauthorized",
         },
         {
           status: 401,
@@ -107,13 +130,16 @@ export async function POST(
       await request.json();
 
     const validated =
-      projectSchema.safeParse(body);
+      projectSchema.safeParse(
+        body,
+      );
 
     if (!validated.success) {
       return NextResponse.json(
         {
           message:
-            validated.error.issues[0]
+            validated.error
+              .issues[0]
               ?.message,
         },
         {
@@ -123,11 +149,11 @@ export async function POST(
     }
 
     const {
-      title = "Untitled Project",
-      skills = [],
-      project_links,
+      title,
+      links,
       description,
-    } = body;
+      skills,
+    } = validated.data;
 
     const {
       data: project,
@@ -135,10 +161,16 @@ export async function POST(
     } = await supabase
       .from("projects")
       .insert({
-        user_id: user.id,
+        project:
+          randomUUID(),
+
         title,
-        links: project_links,
-        description,
+
+        links,
+
+        description:
+          description || null,
+
         skills,
       })
       .select()
@@ -154,7 +186,10 @@ export async function POST(
     } = await supabase
       .from("profiles")
       .select("projects")
-      .eq("user_id", user.id)
+      .eq(
+        "user_id",
+        user.id,
+      )
       .single();
 
     if (profileError) {
@@ -162,7 +197,8 @@ export async function POST(
     }
 
     const currentProjects =
-      profile?.projects ?? [];
+      profile?.projects ??
+      [];
 
     const {
       error: updateError,
@@ -174,7 +210,10 @@ export async function POST(
           project.project,
         ],
       })
-      .eq("user_id", user.id);
+      .eq(
+        "user_id",
+        user.id,
+      );
 
     if (updateError) {
       throw updateError;
