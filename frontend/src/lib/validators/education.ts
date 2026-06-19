@@ -1,238 +1,48 @@
-// src/app/api/education/route.ts
+import { z } from "zod";
 
-import { randomUUID } from "crypto";
+export const educationSchema = z.object({
+  degree: z
+    .string()
+    .uuid("Invalid degree ID"),
 
-import { NextRequest, NextResponse } from "next/server";
+  institute: z
+    .string()
+    .uuid("Invalid institute ID"),
 
-import { createClient } from "@/lib/supabase/server";
-import { educationSchema } from "@/lib/validators/education";
+  cgpa: z
+    .number()
+    .min(0, "CGPA cannot be negative")
+    .max(10, "CGPA cannot exceed 10")
+    .optional(),
 
-export async function GET() {
-  try {
-    const supabase = await createClient();
+  startDate: z
+    .string()
+    .date()
+    .optional(),
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError) {
-      throw authError;
+  endDate: z
+    .string()
+    .date()
+    .optional(),
+}).refine(
+  (data) => {
+    if (!data.startDate || !data.endDate) {
+      return true;
     }
 
-    if (!user) {
-      return NextResponse.json(
-        {
-          message: "Unauthorized",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
-
-    const {
-      data: profile,
-      error: profileError,
-    } = await supabase
-      .from("profiles")
-      .select("education")
-      .eq("user_id", user.id)
-      .single();
-
-    if (profileError) {
-      throw profileError;
-    }
-
-    const educationIds =
-      profile?.education ?? [];
-
-    if (educationIds.length === 0) {
-      return NextResponse.json([]);
-    }
-
-    const {
-      data: education,
-      error: educationError,
-    } = await supabase
-      .from("education")
-      .select("*")
-      .in(
-        "education",
-        educationIds,
-      );
-
-    if (educationError) {
-      throw educationError;
-    }
-
-    return NextResponse.json(
-      education,
+    return (
+      new Date(data.startDate) <=
+      new Date(data.endDate)
     );
-  } catch (error) {
-    return NextResponse.json(
-      {
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch education",
-      },
-      {
-        status: 500,
-      },
-    );
-  }
-}
+  },
+  {
+    message:
+      "End date must be after start date",
+    path: ["endDate"],
+  },
+);
 
-export async function POST(
-  request: NextRequest,
-) {
-  try {
-    const supabase =
-      await createClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError) {
-      throw authError;
-    }
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          message: "Unauthorized",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
-
-    const body =
-      await request.json();
-
-    const validated =
-      educationSchema.safeParse(
-        body,
-      );
-
-    if (!validated.success) {
-      return NextResponse.json(
-        {
-          message:
-            validated.error.issues[0]
-              ?.message ??
-            "Invalid education data",
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    const {
-      degree,
-      institute,
-      cgpa,
-      startDate,
-      endDate,
-    } = validated.data;
-
-    const educationId =
-      randomUUID();
-
-    const {
-      data: education,
-      error: educationError,
-    } = await supabase
-      .from("education")
-      .insert({
-        education:
-          educationId,
-
-        degree,
-        institute,
-
-        cgpa:
-          cgpa ?? null,
-
-        start_date:
-          startDate ??
-          null,
-
-        end_date:
-          endDate ??
-          null,
-      })
-      .select()
-      .single();
-
-    if (educationError) {
-      throw educationError;
-    }
-
-    const {
-      data: profile,
-      error: profileError,
-    } = await supabase
-      .from("profiles")
-      .select("education")
-      .eq(
-        "user_id",
-        user.id,
-      )
-      .single();
-
-    if (profileError) {
-      throw profileError;
-    }
-
-    const currentEducation =
-      profile?.education ??
-      [];
-
-    const {
-      error: updateError,
-    } = await supabase
-      .from("profiles")
-      .update({
-        education: [
-          ...currentEducation,
-          education.education,
-        ],
-      })
-      .eq(
-        "user_id",
-        user.id,
-      );
-
-    if (updateError) {
-      throw updateError;
-    }
-
-    return NextResponse.json(
-      {
-        success: true,
-        education,
-      },
-      {
-        status: 201,
-      },
-    );
-  } catch (error) {
-    return NextResponse.json(
-      {
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to create education",
-      },
-      {
-        status: 500,
-      },
-    );
-  }
-}
+export type EducationInput =
+  z.infer<
+    typeof educationSchema
+  >;
